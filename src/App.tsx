@@ -31,6 +31,11 @@ function App() {
 
   // Execute vibration with compatibility handling
   const startVibration = useCallback((pattern: number[]) => {
+    navigator.vibrate(0); // Stop any ongoing vibrations
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
     if (!navigator.vibrate) {
       setInfo('Vibration not supported on this device');
       return;
@@ -99,7 +104,10 @@ function App() {
             setCurrentMode('');
             setIsVibrating(false);
             setInfo('Vibration stopped');
-            timer && clearTimeout(timer);
+            if (timer) {
+              clearTimeout(timer);
+              timer = null;
+            }
             navigator.vibrate(0);
           }}
         >
