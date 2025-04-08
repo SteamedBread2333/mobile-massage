@@ -12,18 +12,16 @@ function App() {
     deep: [100, 50, 100, 50, 200]    // Deep tissue: high-frequency short pulses
   };
 
+  // Component cleanup logic
+  React.useEffect(
+    () => {
+      return () => {
+        navigator.vibrate(0); // Stop vibration on component unmount
+      };
+    }, []);
+
   // Execute vibration with compatibility handling
   const startVibration = (pattern: number[]) => {
-
-    // Component cleanup logic
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useEffect(
-      () => {
-        return () => {
-          navigator.vibrate(0); // Stop vibration on component unmount
-        };
-      }, []);
-
     if (!navigator.vibrate) {
       setInfo('Vibration not supported on this device');
       return;
