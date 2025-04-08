@@ -1,15 +1,21 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import './App.css'
+
+const vibrationPatterns = {
+  relax: [500, 1000, 500, 1000],
+  soothing: [300, 700, 200, 500],
+  deep: [100, 50, 100, 50, 200]
+};
 
 function App() {
   const [currentMode, setCurrentMode] = React.useState('');
+  const [isVibrating, setIsVibrating] = React.useState(false);
   const [info, setInfo] = React.useState('Please select massage mode');
 
   // Scientific vibration pattern configurations
-  const vibrationPatterns = {
-    relax: [500, 1000, 500, 1000],  // Relaxation mode: 500ms vibration + 1000ms interval
-    soothing: [300, 700, 200, 500],  // Soothing mode: alternating frequency
-    deep: [100, 50, 100, 50, 200]    // Deep tissue: high-frequency short pulses
+  // 计算振动总时长
+  const calculateDuration = (pattern: number[]) => {
+    return Math.round(pattern.reduce((sum, t) => sum + t, 0) / 1000);
   };
 
   // Component cleanup logic
@@ -21,13 +27,27 @@ function App() {
     }, []);
 
   // Execute vibration with compatibility handling
-  const startVibration = (pattern: number[]) => {
+  const startVibration = useCallback((pattern: number[]) => {
     if (!navigator.vibrate) {
       setInfo('Vibration not supported on this device');
       return;
     }
     navigator.vibrate(pattern);
-  };
+    if (isVibrating) {
+      setTimeout(() => startVibration(pattern), pattern.reduce((sum, t) => sum + t, 0));
+    }
+  }, [isVibrating]);
+
+  React.useEffect(() => {
+    if (currentMode) {
+      setIsVibrating(true);
+      startVibration(vibrationPatterns[currentMode as keyof typeof vibrationPatterns]);
+    }
+    return () => {
+      setIsVibrating(false);
+      navigator.vibrate(0);
+    };
+  }, [currentMode, startVibration]);
 
   return (
     <div className="app-container">
@@ -39,36 +59,47 @@ function App() {
           className="mode-btn relax"
           onClick={() => {
             setCurrentMode('relax');
-            setInfo('Relaxation mode running (12s)');
+            setInfo(`Relaxation mode running (${calculateDuration(vibrationPatterns.relax)}s)`);
             startVibration(vibrationPatterns.relax);
           }}
         >
           Relaxation Mode 🌿
-          <span className="duration">12s</span>
+          <span className="duration">{calculateDuration(vibrationPatterns.relax)}s</span>
         </button>
 
         <button
           className="mode-btn soothing"
           onClick={() => {
             setCurrentMode('soothing');
-            setInfo('Soothing mode active (8s)');
+            setInfo(`Soothing mode active (${calculateDuration(vibrationPatterns.soothing)}s)`);
             startVibration(vibrationPatterns.soothing);
           }}
         >
           Soothing Mode 💆
-          <span className="duration">8s</span>
+          <span className="duration">{calculateDuration(vibrationPatterns.soothing)}s</span>
         </button>
 
         <button
           className="mode-btn deep"
           onClick={() => {
             setCurrentMode('deep');
-            setInfo('Deep tissue session (6s)');
+            setInfo(`Deep tissue session (${calculateDuration(vibrationPatterns.deep)}s)`);
             startVibration(vibrationPatterns.deep);
           }}
         >
           Deep Tissue 💪
-          <span className="duration">6s</span>
+          <span className="duration">{calculateDuration(vibrationPatterns.deep)}s</span>
+        </button>
+        <button
+          className="mode-btn stop"
+          onClick={() => {
+            setCurrentMode('');
+            setIsVibrating(false);
+            setInfo('Vibration stopped');
+            navigator.vibrate(0);
+          }}
+        >
+          Stop Vibration ⏹️
         </button>
       </div>
 
