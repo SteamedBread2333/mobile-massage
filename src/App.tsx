@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import React, { useCallback } from 'react'
 import './App.css'
 
@@ -6,6 +7,8 @@ const vibrationPatterns = {
   soothing: [300, 700, 200, 500],
   deep: [100, 50, 100, 50, 200]
 };
+
+let timer: number | null = null;
 
 function App() {
   const [currentMode, setCurrentMode] = React.useState('');
@@ -34,7 +37,7 @@ function App() {
     }
     navigator.vibrate(pattern);
     if (isVibrating) {
-      setTimeout(() => startVibration(pattern), pattern.reduce((sum, t) => sum + t, 0));
+      timer = setTimeout(() => startVibration(pattern), pattern.reduce((sum, t) => sum + t, 0));
     }
   }, [isVibrating]);
 
@@ -96,6 +99,7 @@ function App() {
             setCurrentMode('');
             setIsVibrating(false);
             setInfo('Vibration stopped');
+            timer && clearTimeout(timer);
             navigator.vibrate(0);
           }}
         >
